@@ -33,7 +33,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Unit Test Results (${{ matrix.platform }}-${{ matrix.configuration }})
-          files: ./*TestResult.xml
+          path: ./*TestResult.xml
 
   unit-test-results:
     name: Unit Test Results
