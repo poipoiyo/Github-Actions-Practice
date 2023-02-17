@@ -77,10 +77,8 @@ jobs:
         if: github.ref == 'refs/heads/main'
         shell: powershell
         run: |
-          $url = "https://github.com/api/v3/repos/${{ github.repository }}/releases/latest"
-          $securetoken = ConvertTo-SecureString -String ${{ secrets.REPO_TOKEN }} -AsPlainText -Force
-          $result = Invoke-WebRequest -Method 'Get' -Uri $url -Token $securetoken -Authentication Bearer | ConvertFrom-Json
-          $version = $result.tag_name
+          $url = "https://api.github.com/repos/${{ github.repository }}/releases/latest"
+          $version = (Invoke-WebRequest $releases -UseBasicParsing | ConvertFrom-Json)[0].tag_name
           $new_build_number = [int]($version.Substring($version.LastIndexOf(".") + 1)) + 1
           $new_version = $version.Substring(0, $version.LastIndexOf(".") + 1) + $new_build_number
           echo "::set-output name=result::$new_version"
