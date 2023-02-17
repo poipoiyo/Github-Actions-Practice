@@ -2,16 +2,136 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   unit-test:
     name: Unit Test
-    runs-on: [ windows ]
+    runs-on: [Windows]
        
     strategy:
       matrix:
-        arch: [x64]
         configuration: [Release]
+        platform: [x64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build Unit Tests
+        shell: powershell
+        run: ci/BuildTests.ps1 ${{ matrix.configuration }} ${{ matrix.platform }}
+
+      - name: Run Unit Tests
+        shell: powershell
+        run: ci/RunTests.ps1 ${{ matrix.configuration }} ${{ matrix.platform }}
+
+      - name: Upload Unit Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Unit Test Results (${{ matrix.platform }}-${{ matrix.configuration }})
+          path: ./*TestResult.xml
+
+  unit-test-results:
+    name: Unit Test Results
+    needs: unit-test
+    runs-on: [Windows]
+    permissions:
+      checks: write
+      contents: read
+      issues: read
+      pull-requests: write
+
+    steps:
+      - name: Download Unit Test Results
+        uses: actions/download-artifact@v3
+        with:
+          path: ut-results
+
+      - name: Publish Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action/composite@v2
+        with:
+          files: ut-results/**/*TestResult.xml
+          
+  build:
+    name: Build
+    needs: unit-test
+    runs-on: [Windows]
+    outputs:
+      version_number: ${{ steps.bump_version.outputs.result }}
+
+    strategy:
+      matrix:
+        configuration: [Release]
+        platform: [x64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Bump version
+        id: bump_version
+        if: github.ref == 'refs/heads/main'
+        shell: powershell
+        run: |
+          $url = "https://github.com/poipoiyo/Github-Actions-Practice/releases/latest"
+          $securetoken = ConvertTo-SecureString -String ${{ secrets.REPO_TOKEN }} -AsPlainText -Force
+          $result = Invoke-WebRequest -Method 'Get' -Uri $url -Token $securetoken -Authentication Bearer | ConvertFrom-Json
+          $version = $result.tag_name
+          $new_build_number = [int]($version.Substring($version.LastIndexOf(".") + 1)) + 1
+          $new_version = $version.Substring(0, $version.LastIndexOf(".") + 1) + $new_build_number
+          echo "::set-output name=result::$new_version"
+
+      - name: Build
+        shell: powershell
+        run: ci/CIBuild.ps1 ${{ matrix.configuration }} ${{ matrix.platform }}
+
+      - name: Pack
+        shell: powershell
+        run: ci/CompressBuild.ps1 ${{ matrix.configuration }} ${{ matrix.platform }}
+
+  create-release:
+    name: Create Release
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: [Windows]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Create Release
+        shell: powershell
+        env:
+          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+        run: >
+          hub release create
+          -m "${{ needs.build.outputs.version_number }}"
+          "${{ needs.build.outputs.version_number }}"
+
+  upload-artifacts:
+    name: Upload Artifacts
+    if: github.ref == 'refs/heads/main'
+    needs: [build, create-release]
+    runs-on: [Windows]
+    strategy:
+      matrix:
+        platform: [x64]
+        configuration: [Release]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Upload Release
+        shell: powershell
+        env:
+          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+        run: >
+          hub release edit
+          -a "Package-${{ matrix.platform }}-$${{ matrix.configuration }}.zip"
+          -m "${{ needs.build.outputs.version_number }}"
+          "${{ needs.build.outputs.version_number }}"
