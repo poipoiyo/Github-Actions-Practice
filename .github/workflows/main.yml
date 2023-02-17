@@ -33,7 +33,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Unit Test Results (${{ matrix.platform }}-${{ matrix.configuration }})
-          files: ut-results/**/*TestResult.xml
+          files: ./*TestResult.xml
 
   unit-test-results:
     name: Unit Test Results
@@ -54,7 +54,7 @@ jobs:
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action/composite@v2
         with:
-          files: ut-results/*TestResult.xml
+          files: ut-results/**/*TestResult.xml
           
   build:
     name: Build
