@@ -77,7 +77,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         shell: powershell
         run: |
-          $url = "https://github.com/poipoiyo/Github-Actions-Practice/releases/latest"
+          $url = "https://github.com/api/v3/repos/${{ github.repository }}/releases/latest"
           $securetoken = ConvertTo-SecureString -String ${{ secrets.REPO_TOKEN }} -AsPlainText -Force
           $result = Invoke-WebRequest -Method 'Get' -Uri $url -Token $securetoken -Authentication Bearer | ConvertFrom-Json
           $version = $result.tag_name
