@@ -1,5 +1,5 @@
 param(
-    [String] $Configuration,
+  [String] $Configuration,
 	[String] $Platform
 )
 

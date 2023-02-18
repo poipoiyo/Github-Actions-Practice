@@ -98,9 +98,6 @@ jobs:
     runs-on: [Windows]
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
       - name: Create Release
         shell: powershell
         env:
@@ -121,9 +118,6 @@ jobs:
         configuration: [Release]
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
       - name: Upload Release
         shell: powershell
         env:
