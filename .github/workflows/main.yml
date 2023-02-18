@@ -130,6 +130,6 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: >
           hub release edit
-          -a "Package-${{ matrix.platform }}-$${{ matrix.configuration }}.zip"
+          -a "Package-${{ matrix.platform }}-${{ matrix.configuration }}.zip"
           -m "${{ needs.build.outputs.version_number }}"
           "${{ needs.build.outputs.version_number }}"
