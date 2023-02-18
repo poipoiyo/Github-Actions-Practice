@@ -26,6 +26,12 @@ bool Driver::driveCar()
     return true;
 }
 
+bool Driver::driveBus()
+{
+    // This driver can drive a bus.
+    return true;
+}
+
 bool Driver::flyAirplane()
 {
     // This driver cannot fly an airplane.
