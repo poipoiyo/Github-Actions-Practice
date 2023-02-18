@@ -16,6 +16,7 @@ public:
     void setID(const int ID);
 
     bool driveCar();
+    bool driveBus();
     bool flyAirplane();
 
 private:

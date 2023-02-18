@@ -21,6 +21,12 @@ TEST(TestCaseName, TestDriveCar) {
     ASSERT_TRUE(fakeDriver.driveCar());
 }
 
+TEST(TestCaseName, TestDriveBus) {
+    Driver fakeDriver;
+
+    ASSERT_TRUE(fakeDriver.driveBus());
+}
+
 TEST(TestCaseName, TestFlyAirplane) {
     Driver fakeDriver;
 
